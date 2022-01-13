@@ -194,12 +194,62 @@ public class LogCatParser implements ILogParser
         return logInfo;
     }
 
+    public boolean isUserInfo(String strText) {
+        if (strText.length() < 39) return false;
+
+        String strLevel = (String) strText.substring(37, 39);
+        if (strLevel.equals("D ") ||
+            strLevel.equals("V ") ||
+            strLevel.equals("I ") ||
+            strLevel.equals("W ") ||
+            strLevel.equals("E ") ||
+            strLevel.equals("F ")
+        )
+            return true;
+        return false;
+    }
+
+    public LogInfo getUserInfo(String strText) {
+        LogInfo logInfo = new LogInfo();
+
+        StringTokenizer stk = new StringTokenizer(strText, TOKEN_SPACE, false);
+        if(stk.hasMoreElements())
+            logInfo.m_strDate = stk.nextToken();
+        if(stk.hasMoreElements())
+            logInfo.m_strTime = stk.nextToken();
+        if(stk.hasMoreElements())
+            stk.nextToken();
+        if(stk.hasMoreElements())
+            logInfo.m_strPid = stk.nextToken().trim();
+        if(stk.hasMoreElements())
+            logInfo.m_strThread = stk.nextToken().trim();
+        if(stk.hasMoreElements())
+            logInfo.m_strLogLV = stk.nextToken().trim();
+        if(stk.hasMoreElements())
+            logInfo.m_strTag = stk.nextToken();
+        if(stk.hasMoreElements())
+        {
+            logInfo.m_strMessage = stk.nextToken(TOKEN_MESSAGE);
+            while(stk.hasMoreElements())
+            {
+                logInfo.m_strMessage += stk.nextToken(TOKEN_MESSAGE);
+            }
+            logInfo.m_strMessage = logInfo.m_strMessage.replaceFirst("\\): ", "");
+        }
+        logInfo.m_TextColor = getColor(logInfo);
+        return logInfo;
+    }
+
+
+
     public LogInfo parseLog(String strText)
     {
         if(isNormal(strText))
             return getNormal(strText);
         else if(isThreadTime(strText))
             return getThreadTime(strText);
+        else if (isUserInfo(strText))
+            return getUserInfo(strText);
         else if(isKernel(strText))
             return getKernel(strText);
         else
